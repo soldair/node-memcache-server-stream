@@ -1,33 +1,21 @@
 var net = require('net')
 ,lruCache = require('lru-cache')
-,getmc = require('./mc.js')
+,mc = require('./index.js')
 ;
 
-var cache = lruCache(1000000,function (item) { return item.length });
+module.exports = function(cache){
 
-var server = net.createServer(function(con){
-  console.log('new connection!');
+  cache = cache||lruCache(1000000,function (item) { return item.length });
 
-  var mc = getmc(cache);
-  con.on('data',function(buf){
-     mc.write(buf);
-  }); 
-
-  mc.on('data',function(buf){
-    console.log('sending data! ',buf);
-    con.write(buf);
+  var server = net.createServer(function(con){
+    
+    con.pipe(mc(cache)).pipe(con);
+    con.resume();
+    
   });
 
-  mc.on('end',function(){
-    con.end();
-  });
-
-});
-
-server.listen(11200,function(){
-    console.log('node mock memcache server running on 11200');
-});
-
+  return server;
+}
 
 
 

@@ -1,0 +1,30 @@
+{
+  "name": "memcache-server-stream",
+  "version": "0.0.0",
+  "description": "duplex stream implementation of memcache server protocol. pipe any net connection to add mc support to your node server",
+  "main": "index.js",
+  "scripts": {
+    "test": "tap test/*.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/soldair/node-mock-memcache-server.git"
+  },
+  "keywords": [
+    "memcache",
+    "memcached",
+    "server",
+    "protocol"
+  ],
+  "dependencies":{
+    "duplex":"~0.2.2",
+    "lru-cache":"~2.0.4"
+  },
+  "devDependencies":{
+    "memcached":"~0.1.2"
+    ,"tap":"~0.3.1"
+  },
+  "author": "Ryan Day",
+  "license": "BSD"
+}

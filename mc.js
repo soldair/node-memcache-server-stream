@@ -1,4 +1,4 @@
-var EventEmitter = require('events').EventEmitter,
+var Stream = require('stream').Stream,
 crypto = require('crypto')
 ;
 
@@ -9,12 +9,12 @@ module.exports = function(cache){
 module.exports.Mc = Mc;
 
 function Mc(cache){
-  EventEmitter.call(this);
+  Stream.call(this);
   this.cache = cache;
   //else this.cache = cache(1000000,function (item) { return item.length });
 }
 
-require('util').inherits(Mc,EventEmitter);
+require('util').inherits(Mc,Stream);
 
 // memcache server treats a ttl value less than or equal to this value as offset seconds from now.
 // else its considered a unix timestamp.
@@ -37,6 +37,7 @@ mix(Mc.prototype,{
   state:'command',
   //stream writey method
   writeable:true,
+  readable:true,
   write:function(buf) {
     if(this.ended) return false;
     
@@ -53,8 +54,7 @@ mix(Mc.prototype,{
       remaining = parts.join("\r\n");
       try{
         var args = cmd.split(' ');
-        console.log('processing command args');
-        console.log(args);
+        this.emit('log',{level:'debug',msg:'processing command args',data:args});
 
         if(this.cmd(args)) {
           this.cmdbuffer = remaining;
@@ -63,7 +63,7 @@ mix(Mc.prototype,{
         }
       } catch (e){
         this.sendline('SERVER_ERROR '+e.message);
-        console.log('SERVER_ERROR',e.message,e.stack);
+        this.emit('log',{level:'error',msg:e.message})
         process.nextTick(function(){
           z.end();
         });
@@ -127,12 +127,10 @@ mix(Mc.prototype,{
       buf = buf.toString('utf8');
     }
 
-    console.log('recv data ',buf.length);
     this.databuffer += buf;
 
     if(length >= this.databytes) {
       var value = this.databuffer.substr(0,this.databytes);
-      console.log('storing ',value);
 
       this.dataobj.value = value;//new Buffer(this.databuffer.slice(0,this,databytes));
 
@@ -145,7 +143,8 @@ mix(Mc.prototype,{
       if(this.cmdbuffer.substr(0,2) == "\r\n") {
         this.cmdbuffer = this.cmdbuffer.substr(2);
       } 
-      console.log('setting command buffer to ',this.cmdbuffer);
+
+      this.emit('log',{level:'debug',msg:'setting command buffer to '+this.cmdbuffer});
 
       this.databuffer = '';
     }
@@ -156,24 +155,25 @@ mix(Mc.prototype,{
   //
   ttl:function(ttl){
       var result = (ttl<=SECONDS_MONTH?Date.now()+(ttl*1000):ttl*1000);
-      console.log('input ttl ',ttl);
-      console.log('resulting ttl ',result);
-      console.log(result-Date.now(),' ms remaining');
       return result;
   },
   get:function(key){
-      console.log('looking for key ',key,' in cache');
       //get item from internal cache if not expired
       var obj = this.cache.get(key);
-      console.log('found: ',obj);
+
       if(obj && obj.ttl < Date.now()){
-        console.log(key,' is expired ',obj.ttl,' < ',Date.now());
+
+        this.emit('log',{level:'stat',data:'expired',msg:'expired key '+key+'. '+obj.ttl+' < '+Date.now()});
         return undefined;
       }
+
+      if(obj) this.emit('log',{level:'stat',data:'hit',msg:'found key '+key});
+      else this.emit('log',{level:'stat',data:'miss',msg:'missed key '+key});
+
       return obj;
   },
   set:function(key,obj){
-      console.log('STORING ',key,obj);
+      this.emit('log',{level:'stat',data:"store",msg:"storing "+key});
       //set item in cache
       this.cache.set(key,obj);
   },
@@ -230,9 +230,15 @@ mix(Mc.prototype,{
 
     this.emit('data',data);
   },
-  end:function(){
+  end:function(buf){
+    if(arguments.length) this.write(buf);
+
+    this.writeable = false;
     this.ended = false;
-    this.emit('end');    
+    this.emit('end');
+  },
+  destroy:function(){
+    this.writeable = false;
   }
 });
 
