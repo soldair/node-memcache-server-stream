@@ -113,6 +113,21 @@ mix(Mc.prototype,{
         });
         z.sendline("END");
         return true;
+      case "touch":
+        //the key to touch
+        if(args[1] === undefined) return this.cmd(['error']);
+        //the int exp time
+        args[2] = parseInt(args[2]);
+        if(isNaN(args[2])) return this.cmd(['error']);
+        
+        var s = 'TOUCHED';
+        var obj = z.get(args[1]);
+
+        if(!obj) s = 'NOT_FOUND'
+        else obj.ttl = z.ttl(args[2])
+        
+        if(args[3] !== 'noreply') z.sendline(s);
+        return true;
       case "quit":
         this.end();
         return true;

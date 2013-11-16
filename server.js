@@ -10,7 +10,9 @@ module.exports = function(cache){
   var server = net.createServer(function(con){
     
     con.pipe(mc(cache)).pipe(con);
-    con.resume();
+    try{
+    con.resume();// 0.6 style
+    } catch(e){}
     
   });
 

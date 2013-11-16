@@ -1,6 +1,6 @@
 {
   "name": "memcache-server-stream",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "duplex stream implementation of memcache server protocol. pipe any net connection to add mc support to your node server",
   "main": "index.js",
   "scripts": {
