@@ -3,7 +3,7 @@ crypto = require('crypto')
 ;
 
 module.exports = function(cache){
-  return new Mc(cache);  
+  return new Mc(cache);
 }
 
 module.exports.Mc = Mc;
@@ -18,7 +18,7 @@ require('util').inherits(Mc,Stream);
 
 // memcache server treats a ttl value less than or equal to this value as offset seconds from now.
 // else its considered a unix timestamp.
-var SECONDS_MONTH = 60*60*24*30; 
+var SECONDS_MONTH = 60*60*24*30;
 
 mix(Mc.prototype,{
   // the instance of a cache object
@@ -40,13 +40,13 @@ mix(Mc.prototype,{
   readable:true,
   write:function(buf) {
     if(this.ended) return false;
-    
+
     if(this.state == 'command') {
       this.cmdbuffer += buf.toString('utf8');
       var z = this
       ,parts = z.cmdbuffer.split("\r\n")
       ,cmd = false;
-      
+
       if(parts.length > 1) {
         cmd = parts.shift();
       }
@@ -69,8 +69,8 @@ mix(Mc.prototype,{
         });
         this.cmdbuffer = remaining;
       }
-    } 
-   
+    }
+
     if (this.state == 'data'){
       this.data(buf);
     }
@@ -94,7 +94,7 @@ mix(Mc.prototype,{
         //the int bytes
         args[4] = parseInt(args[4]);
         if(isNaN(args[4])) return this.cmd(['error']);
-        
+
         this.dataobj = this.obj(args[1],args[2],args[3]);
         this.databytes = args[4];
         this.state = 'data';
@@ -119,13 +119,13 @@ mix(Mc.prototype,{
         //the int exp time
         args[2] = parseInt(args[2]);
         if(isNaN(args[2])) return this.cmd(['error']);
-        
+
         var s = 'TOUCHED';
         var obj = z.get(args[1]);
 
         if(!obj) s = 'NOT_FOUND'
         else obj.ttl = z.ttl(args[2])
-        
+
         if(args[3] !== 'noreply') z.sendline(s);
         return true;
       case "quit":
@@ -157,7 +157,7 @@ mix(Mc.prototype,{
 
       if(this.cmdbuffer.substr(0,2) == "\r\n") {
         this.cmdbuffer = this.cmdbuffer.substr(2);
-      } 
+      }
 
       this.emit('log',{level:'debug',msg:'setting command buffer to '+this.cmdbuffer});
 
@@ -165,7 +165,7 @@ mix(Mc.prototype,{
     }
   },
   //
-  // cache instance manipulation 
+  // cache instance manipulation
   //  applies seconds to miliseconds conversion.
   //
   ttl:function(ttl){
@@ -207,8 +207,8 @@ mix(Mc.prototype,{
       get value(){
         return buf;
       },
-      set value(val,mode){
-        buf = mode=='append'?buf+val:(mode=='prepend'?val+buf:val);
+      set value(val){
+        buf = val;
         this.cas = z.hash(buf);
         this.length = buf.length;
       }
@@ -217,7 +217,7 @@ mix(Mc.prototype,{
   hash:function(val){
     var hash = crypto.createHash('sha256');
     hash.update(val);
-    return hash.digest('hex');   
+    return hash.digest('hex');
   },
   //
   //more writey stream methods.
