@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/soldair/node-mock-memcache-server.git"
+    "url": "git://github.com/soldair/node-memcache-server-stream.git"
   },
   "keywords": [
     "memcache",
@@ -17,14 +17,14 @@
     "server",
     "protocol"
   ],
-  "dependencies":{
-    "duplex":"~0.2.2",
-    "lru-cache":"~2.0.4"
+  "dependencies": {
+    "duplex": "^1.0.0",
+    "lru-cache": "^4.0.1"
   },
-  "devDependencies":{
-    "memcached":"~0.1.2"
-    ,"tap":"~0.3.1"
+  "devDependencies": {
+    "memcached": "^2.2.1",
+    "tap": "^5.7.1"
   },
   "author": "Ryan Day",
-  "license": "BSD"
+  "license": "BSD-2-Clause"
 }
